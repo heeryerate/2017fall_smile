@@ -1,0 +1,27 @@
+#######
+# latex temporary files
+#######
+
+*.out
+*.blg
+*.synctex.gz
+*.log
+*.aux
+*.fdb_latexmk
+*.toc
+.DS_Store
+*.fls
+
+#######
+# data temporary files
+#######
+
+*.pkl
+*.mat
+*.eps
+*.pdf
+
+#######
+# user specified
+#######
+_BIN/
