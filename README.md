@@ -21,8 +21,8 @@ refer to: [real-time facial emotion recognition](https://www.youtube.com/watch?v
     - Learn how to use `git` and work with `github`
 
          please try to modify the following two lines:
-        * zhenyu: (*add something here*) I'm here. I’m here again.
-        * judy: (*add something here*) I'm here as well.
+        * zhenyu: (*add something here*)
+        * judy: (*add something here*) 
     - Use python package `opencv` to detect faces in a photo, something like
             <div align="center"><img width="50%" height="50%" src="http://www.compciv.org/files/images/homework/face-boxer-ellen.jpg"/></div>
 
@@ -51,6 +51,8 @@ refer to: [real-time facial emotion recognition](https://www.youtube.com/watch?v
     - *We will have joint meeting with Martin this week*
 + October 18th, 2017
     - Extend the work to web-camera, we should be able to export images from real time web-camera and recognize the face emotions in the image
+
+      A real time web-camera implementation by OpenCV [Blog:](https://realpython.com/blog/python/face-detection-in-python-using-a-webcam/)
     - Do real time FER
 + October 25th, 2017
     - Produce a visual demo for our real time facial emotions recognition, something like [real-time facial emotion recognition](https://www.youtube.com/watch?v=GMy0Zs8LX-o)
