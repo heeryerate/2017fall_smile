@@ -18,6 +18,7 @@ refer to: [real-time facial emotion recognition](https://www.youtube.com/watch?v
 ### TimeLine
 
 + September 20th, 2017
+    - `Download Opencv`: [tutorial](https://www.pyimagesearch.com/2016/12/05/macos-install-opencv-3-and-python-3-5/)
     - Learn how to use `git` and work with `github`
 
          please try to modify the following two lines:
