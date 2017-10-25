@@ -35,12 +35,13 @@ faces = faceCascade.detectMultiScale(
         gray,
         scaleFactor=1.1,
         minNeighbors=6,
-        minSize=(6, 6),
+        #minSize=(6, 6),
         
     )
 
 
-   
+print(len(faces))
+
 print ("Yay~ Found {0} faces!".format(len(faces)))
 # Draw a rectangle around the faces
 for (x, y, w, h) in faces:
