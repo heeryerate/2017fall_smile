@@ -13,7 +13,7 @@
 
 ############
 
-import pylab
+#import pylab
 import numpy
 import numpy as np
 import torch
@@ -23,7 +23,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 from torch import utils
-from matplotlib.pyplot import *
+#from matplotlib.pyplot import *
 from PIL import Image
 import pickle
 
@@ -70,6 +70,8 @@ for epoch in range(10):
 
         yD  =  y[i*BS:(i+1)*BS]
         xD  =  X[i*BS:(i+1)*BS,:,:,:]
+
+
 
 
         xx = torch.from_numpy(xD)
