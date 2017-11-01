@@ -23,7 +23,8 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.autograd import Variable
 from torch import utils
-from matplotlib.pyplot import *
+#from matplotlib.pyplot import *
+import matplotlib.pyplot as plt
 from PIL import Image
 import pickle
 
@@ -33,52 +34,102 @@ with open('data.pickle', 'rb') as f:
 
 
 
-X =np.array( data['XTr']/255.0, dtype='f')
-y = data['yTr']
+X =np.array( data['XTr']/255.0, dtype='f') #normalize 
+y = data['yTr']                            #training images
 
 
-class MnistModel(nn.Module):
+class Model(nn.Module):
     def __init__(self):
-        super(MnistModel, self).__init__()
-        # input is 28x28
-        # padding=2 for same padding
+        super(Model, self).__init__()
+        # input is 49x64
+        # padding=2 
         self.conv1 = nn.Conv2d(1, 32, 5, padding=2)
-        # feature map size is 14*14 by pooling
-        # padding=2 for same padding
+        # self.conv1Bias = nn.Linear(1,1,1,32)
         self.conv2 = nn.Conv2d(32, 64, 5, padding=2)
-        # feature map size is 7*7 by pooling
-        self.fc1 = nn.Linear(12288, 1024)
-        self.fc2 = nn.Linear(1024, 10)
+        self.conv3 = nn.Conv2d(64, 96, 5, padding=2)
+        
+        self.fc1 = nn.Linear(4608, 1024)
+        self.fc2 = nn.Linear(1024, 128)
+        self.fc3 = nn.Linear(128, 10)
     
     def forward(self, x):
         x = F.max_pool2d(F.relu(self.conv1(x)), 2)
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)
-        x = x.view(-1, 64*16*12)   # reshape Variable
+        x = F.max_pool2d(F.relu(self.conv3(x)), 2)
+        #return x
+        x = x.view(-1, 96*6*8)   # reshape Variable
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
-        x = self.fc2(x)
+        x = F.relu(self.fc2(x))
+        x = F.dropout(x, training=self.training)
+        x = self.fc3(x)
         return F.log_softmax(x)
 
-model = MnistModel()
+model = Model()
 
 n = len(y)
-BS = 10
+print ('ylength', n)
+batch_size = 4
+model.train()
+optimizer = optim.Adam(model.parameters())
 
 
-for epoch in range(10):
-    for i in range(n//BS):
-
-        yD  =  y[i*BS:(i+1)*BS]
-        xD  =  X[i*BS:(i+1)*BS,:,:,:]
-
-
-        xx = torch.from_numpy(xD)
-
+train_loss = []
+train_accu = []
+j = 0h
+#train the model
+for epoch in range(200):
+    for i in range(n//batch_size):
+        optimizer.zero_grad()
+        yD  =  y[i*batch_size:(i+1)*batch_size]
+        #print (yD)
+        yy = torch.from_numpy(yD)
+        train_label = Variable(yy)
+        #print (train_label)
+        xD  =  X[i*batch_size:(i+1)*batch_size,:,:,:]
+        xx = torch.from_numpy(xD) # creates a tensor 
         xOut = model.forward(Variable(xx))
-# 64   160  122
-        print (xOut)
+#print (xOut.size())
+
+        loss = F.nll_loss(xOut, train_label)
+        loss.backward()    # calc gradients
+        train_loss.append(loss.data[0])
+        optimizer.step()   # update gradients
+        #print (xOut)
+        prediction = xOut.data.max(1)[1]   
+        #print ("pre", xOut.data.max(1)[1])
+        #print (xOut.data)
+        accuracy = prediction.eq(train_label.data).sum()/batch_size*100
+        train_accu.append(accuracy)
+        if j % 10 == 0:
+            print('Train Step: {}\tLoss: {:.3f}\tAccuracy: {:.3f}'.format(j, loss.data[0], accuracy))
+        j += 1
+
+        #print (xOut)
 
 
+# test on testing data 
+model.eval()
+yTe = data['yTe']
+xTe =np.array( data['XTe']/255.0, dtype='f')
+n_test = len(yTe)
+correct = 0
+for i in range(n_test//20): #batch size = 20 
+    teX = xTe[i*20:(i+1)*20,:,:,:]
+    testX = torch.from_numpy(teX)
+
+    tey = yTe[i*20:(i+1)*20]
+    testy = torch.from_numpy(tey)
+
+    testingX, testing_label = Variable(testX, volatile = True), Variable(testy)
+    testingOut = model(testingX)
+    prediction = testingOut.data.max(1)[1]
+    correct += prediction.eq(testing_label.data).sum()
+
+print('\nTest set: Accuracy: {:.2f}%'.format(100. * correct / n_test))
+
+plt.plot(np.arange(len(train_accu)), train_accu)
+plt.show()
 
 
 '''train_loader = torch.utils.data.DataLoader(
@@ -92,39 +143,6 @@ test_loader = torch.utils.data.DataLoader(
 for p in model.parameters():
     print(p.size())
 
-optimizer = optim.Adam(model.parameters(), lr=0.0001)
-
-model.train()
-train_loss = []
-train_accu = []
-i = 0
-for epoch in range(15):
-    for data, target in train_loader:
-        data, target = Variable(data), Variable(target)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = F.nll_loss(output, target)
-        loss.backward()    # calc gradients
-        train_loss.append(loss.data[0])
-        optimizer.step()   # update gradients
-        prediction = output.data.max(1)[1]   # first column has actual prob.
-        accuracy = prediction.eq(target.data).sum()/batch_size*100
-        train_accu.append(accuracy)
-        if i % 1000 == 0:
-            print('Train Step: {}\tLoss: {:.3f}\tAccuracy: {:.3f}'.format(i, loss.data[0], accuracy))
-        i += 1
-
-plt.plot(np.arange(len(train_loss)), train_loss)
-plt.plot(np.arange(len(train_accu)), train_accu)
-model.eval()
-correct = 0
-for data, target in test_loader:
-    data, target = Variable(data, volatile=True), Variable(target)
-    output = model(data)
-    prediction = output.data.max(1)[1]
-    correct += prediction.eq(target.data).sum()
-
-print('\nTest set: Accuracy: {:.2f}%'.format(100. * correct / len(test_loader.dataset)))
 
 '''
 
