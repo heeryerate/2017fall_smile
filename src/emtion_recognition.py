@@ -24,10 +24,7 @@ from torchvision import datasets, transforms
 from torch.autograd import Variable
 from torch import utils
 #from matplotlib.pyplot import *
-<<<<<<< HEAD
 import matplotlib.pyplot as plt
-=======
->>>>>>> f0a615c7ea5a9ed4d17173ac8b0a5c9223ba4c24
 from PIL import Image
 import pickle
 
@@ -109,14 +106,7 @@ for epoch in range(200):
         j += 1
 
         #print (xOut)
-
-<<<<<<< HEAD
-=======
-
-
-        xx = torch.from_numpy(xD)
->>>>>>> f0a615c7ea5a9ed4d17173ac8b0a5c9223ba4c24
-
+ 
 # test on testing data 
 model.eval()
 yTe = data['yTe']
