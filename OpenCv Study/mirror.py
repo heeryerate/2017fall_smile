@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-image = cv2.imread('book.jpg')
+image = cv2.imread('wb.jpg')
 rows = image.shape[0]
 cols = image.shape[1]
 #mirror_col = int(cols/2) 
@@ -10,8 +10,9 @@ new_cols = cols*2
 # mirror_image = np.zeros(shape=(rows, new_cols, 3), dtype = np.uint8)
 
 # print(image)
-image = np.concatenate((image, image[::-1]), axis=0)
-mirror_image = np.concatenate((image, image, image, image), axis=1)
+#image = np.concatenate((image, image[::-1]), axis=1)
+#mirror_image = np.concatenate((image), axis=0)
+image = cv2.flip( image, 1 )
 
 
 # coli = 0
@@ -42,6 +43,7 @@ mirror_image = np.concatenate((image, image, image, image), axis=1)
 # if rowj>=rows:
 #     rowj=0
        
-cv2.imshow('mirror image', mirror_image)
+cv2.imshow('mirror image', image)
+
 cv2.waitKey()
 cv2.destroyAllWindows()

@@ -13,14 +13,14 @@ while True:
 
     faces = faceCascade.detectMultiScale(
         gray,
-        scaleFactor=1.5,
-        minNeighbors=5,
-        #minSize=(5, 5),
+        scaleFactor=1.1,
+        minNeighbors=6,
+        minSize=(30, 30),
     )
 
     # Draw a rectangle around the faces
     for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 105, 200), 3)
+        cv2.rectangle(frame, (x, y), (x+256, y+256), (255, 105, 200), 3)
 
     # Display the resulting frame
     cv2.imshow('Video', frame)
