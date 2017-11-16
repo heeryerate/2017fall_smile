@@ -44,11 +44,10 @@ class Model(nn.Module):
         # input is 49x64
         # padding=2 
         self.conv1 = nn.Conv2d(1, 32, 5, padding=2)
-        # self.conv1Bias = nn.Linear(1,1,1,32)
         self.conv2 = nn.Conv2d(32, 64, 5, padding=2)
         self.conv3 = nn.Conv2d(64, 96, 5, padding=2)
         
-        self.fc1 = nn.Linear(4608, 1024)
+        self.fc1 = nn.Linear(96*8*8, 1024)
         self.fc2 = nn.Linear(1024, 128)
         self.fc3 = nn.Linear(128, 10)
     
@@ -56,8 +55,7 @@ class Model(nn.Module):
         x = F.max_pool2d(F.relu(self.conv1(x)), 2)
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)
         x = F.max_pool2d(F.relu(self.conv3(x)), 2)
-        #return x
-        x = x.view(-1, 96*6*8)   # reshape Variable
+        x = x.view(-1, 96*8*8)   # reshape Variable
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = F.relu(self.fc2(x))
@@ -69,14 +67,14 @@ model = Model()
 
 n = len(y)
 print ('ylength', n)
-batch_size = 4
+batch_size = 10
 model.train()
 optimizer = optim.Adam(model.parameters())
 
 
 train_loss = []
 train_accu = []
-j = 0h
+j = 0
 #train the model
 for epoch in range(200):
     for i in range(n//batch_size):
@@ -89,8 +87,7 @@ for epoch in range(200):
         xD  =  X[i*batch_size:(i+1)*batch_size,:,:,:]
         xx = torch.from_numpy(xD) # creates a tensor 
         xOut = model.forward(Variable(xx))
-#print (xOut.size())
-
+        # print (xOut.size())
         loss = F.nll_loss(xOut, train_label)
         loss.backward()    # calc gradients
         train_loss.append(loss.data[0])
@@ -131,7 +128,7 @@ plt.plot(np.arange(len(train_accu)), train_accu)
 plt.show()
 
 
-'''train_loader = torch.utils.data.DataLoader(
+train_loader = torch.utils.data.DataLoader(
                                            datasets.MNIST('data', train=True, download=True, transform=transforms.ToTensor()),
                                            batch_size=batch_size, shuffle=True)
 
@@ -143,7 +140,7 @@ for p in model.parameters():
     print(p.size())
 
 
-'''
+
 
 
 
