@@ -34,28 +34,39 @@ with open('data.pickle', 'rb') as f:
 
 
 
-X =np.array( data['XTr']/255.0, dtype='f') #normalize 
+X = np.array( data['XTr']/255.0, dtype ='f') #normalize 
 y = data['yTr']                            #training images
+yTe = data['yTe']
+xTe =np.array( data['XTe']/255.0, dtype='f')
+
+
+
+
 
 
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        # input is 49x64
+        # input is 128x128
         # padding=2 
-        self.conv1 = nn.Conv2d(1, 32, 5, padding=2)
-        self.conv2 = nn.Conv2d(32, 64, 5, padding=2)
-        self.conv3 = nn.Conv2d(64, 96, 5, padding=2)
-        
-        self.fc1 = nn.Linear(96*8*8, 1024)
-        self.fc2 = nn.Linear(1024, 128)
-        self.fc3 = nn.Linear(128, 10)
+        self.conv1 = nn.Conv2d(1, 96, 7, padding = 2)
+        self.conv2 = nn.Conv2d(96, 256, 5, padding = 2)
+        self.conv3 = nn.Conv2d(256, 512, 3, padding = 2)
+        self.conv4 = nn.Conv2d(512, 512, 3, padding = 2)
+        self.conv5 = nn.Conv2d(512, 512, 3, padding = 2)
     
+        self.fc1 = nn.Linear(512*16*16, 4048)
+        self.fc2 = nn.Linear(4048, 4049) #1024
+        self.fc3 = nn.Linear(4049, 7)
+        
     def forward(self, x):
-        x = F.max_pool2d(F.relu(self.conv1(x)), 2)
+        x = F.max_pool2d(F.relu(self.conv1(x)), 3)
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)
-        x = F.max_pool2d(F.relu(self.conv3(x)), 2)
-        x = x.view(-1, 96*8*8)   # reshape Variable
+        x = F.relu(self.conv3(x))
+        x = F.relu(self.conv4(x))
+        x = F.max_pool2d(F.relu(self.conv5(x)), 3)
+        # return x
+        x = x.view(-1, 512*16*16)   # reshape Variable
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = F.relu(self.fc2(x))
@@ -63,17 +74,71 @@ class Model(nn.Module):
         x = self.fc3(x)
         return F.log_softmax(x)
 
-model = Model()
+class NaiveModel(nn.Module):
+    def __init__(self):
+        super(NaiveModel, self).__init__()
+        # input is 128x128
+        # padding=2 
+        self.conv1 = nn.Conv2d(1, 4, 11, padding = 2)
+        # self.conv2 = nn.Conv2d(96, 256, 5, padding = 2)
+        # self.conv3 = nn.Conv2d(256, 512, 3, padding = 2)
+        # self.conv4 = nn.Conv2d(512, 512, 3, padding = 2)
+        # self.conv5 = nn.Conv2d(512, 512, 3, padding = 2)
+    
+        self.fc1 = nn.Linear(4*83*83, 7)
+        # self.fc2 = nn.Linear(4048, 4049) #1024
+        # self.fc3 = nn.Linear(4049, 7)
+        
+    def forward(self, x):
+        x = F.max_pool2d(F.relu(self.conv1(x)), 3)
+        # x = F.max_pool2d(F.relu(self.conv2(x)), 2)
+        # x = F.relu(self.conv3(x))
+        # x = F.relu(self.conv4(x))
+        # x = F.max_pool2d(F.relu(self.conv5(x)), 3)
+        x = x.view(-1, 4*83*83)   # reshape Variable
+        x = F.relu(self.fc1(x))
+        return F.log_softmax(x)
+        
+        
+
+# model = Model()
+model = NaiveModel()
 
 n = len(y)
-print ('ylength', n)
+
+#print ('ylength', n)
+#print ('testLength', nTest)
 batch_size = 10
 model.train()
 optimizer = optim.Adam(model.parameters())
 
+def testing_acc():
+
+    model.eval()
+
+    n_test = len(yTe)
+    correct = 0
+    for i in range(n_test//20): #batch size = 20 
+        teX = xTe[i*20:(i+1)*20,:,:,:]
+        testX = torch.from_numpy(teX)
+
+        tey = yTe[i*20:(i+1)*20]
+        testy = torch.from_numpy(tey)
+
+        testingX, testing_label = Variable(testX, volatile = True), Variable(testy)
+        testingOut = model(testingX)
+        prediction = testingOut.data.max(1)[1]
+        correct += prediction.eq(testing_label.data).sum()
+
+    print('\nTest set: Accuracy: {:.2f}%'.format(100. * correct / n_test))
+
+    plt.plot(np.arange(len(train_accu)), train_accu)
+    plt.show()
 
 train_loss = []
 train_accu = []
+test_loss = []
+test_accu = []
 j = 0
 #train the model
 for epoch in range(200):
@@ -87,7 +152,8 @@ for epoch in range(200):
         xD  =  X[i*batch_size:(i+1)*batch_size,:,:,:]
         xx = torch.from_numpy(xD) # creates a tensor 
         xOut = model.forward(Variable(xx))
-        # print (xOut.size())
+        #print (xOut.size())
+        #break
         loss = F.nll_loss(xOut, train_label)
         loss.backward()    # calc gradients
         train_loss.append(loss.data[0])
@@ -100,44 +166,37 @@ for epoch in range(200):
         train_accu.append(accuracy)
         if j % 10 == 0:
             print('Train Step: {}\tLoss: {:.3f}\tAccuracy: {:.3f}'.format(j, loss.data[0], accuracy))
+        if j % 100 == 0: 
+            testing_acc()
         j += 1
 
-        #print (xOut)
+
+
+#         #print (xOut)
  
-# test on testing data 
-model.eval()
-yTe = data['yTe']
-xTe =np.array( data['XTe']/255.0, dtype='f')
-n_test = len(yTe)
-correct = 0
-for i in range(n_test//20): #batch size = 20 
-    teX = xTe[i*20:(i+1)*20,:,:,:]
-    testX = torch.from_numpy(teX)
+# # test on testing data 
+# def testing_acc():
 
-    tey = yTe[i*20:(i+1)*20]
-    testy = torch.from_numpy(tey)
+#     model.eval()
 
-    testingX, testing_label = Variable(testX, volatile = True), Variable(testy)
-    testingOut = model(testingX)
-    prediction = testingOut.data.max(1)[1]
-    correct += prediction.eq(testing_label.data).sum()
+#     n_test = len(yTe)
+#     correct = 0
+#     for i in range(n_test//20): #batch size = 20 
+#         teX = xTe[i*20:(i+1)*20,:,:,:]
+#         testX = torch.from_numpy(teX)
 
-print('\nTest set: Accuracy: {:.2f}%'.format(100. * correct / n_test))
+#         tey = yTe[i*20:(i+1)*20]
+#         testy = torch.from_numpy(tey)
 
-plt.plot(np.arange(len(train_accu)), train_accu)
-plt.show()
+#         testingX, testing_label = Variable(testX, volatile = True), Variable(testy)
+#         testingOut = model(testingX)
+#         prediction = testingOut.data.max(1)[1]
+#         correct += prediction.eq(testing_label.data).sum()
 
+#     print('\nTest set: Accuracy: {:.2f}%'.format(100. * correct / n_test))
 
-train_loader = torch.utils.data.DataLoader(
-                                           datasets.MNIST('data', train=True, download=True, transform=transforms.ToTensor()),
-                                           batch_size=batch_size, shuffle=True)
-
-test_loader = torch.utils.data.DataLoader(
-                                          datasets.MNIST('data', train=False, transform=transforms.ToTensor()),
-                                          batch_size=1000)
-
-for p in model.parameters():
-    print(p.size())
+#     plt.plot(np.arange(len(train_accu)), train_accu)
+#     plt.show()
 
 
 

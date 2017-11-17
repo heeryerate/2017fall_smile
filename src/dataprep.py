@@ -29,14 +29,14 @@ for cl  in cls:
     for im in  os.listdir(foldLoc):     
         f = foldLoc+im
         #print (im[0])
-        if im[0] != '.':
+        if im[0] == '.':
             continue
         print (f)    
         img = cv2.imread(f,0) #greyscale
-        print (img.size())
+        #print (img.size())
 
-        #resize by multiplying 0.25
-        res = cv2.resize(img,None,fx=0.5, fy=0.5, interpolation = cv2.INTER_CUBIC)
+        #resize by multiplying 0.5
+        res = cv2.resize(img,None,fx=1, fy=1, interpolation = cv2.INTER_CUBIC)
         #new image size: 64x64
         imM = np.array(res)
         X.append(imM)
@@ -55,7 +55,7 @@ yTr=[]
 yTe=[]
 
 for id in idx:
-    xx = np.reshape(X[id],[1,128,128])
+    xx = np.reshape(X[id],[1,256,256])
     
     if random.random()<0.85:	#85% training 
         XTr.append(xx)
