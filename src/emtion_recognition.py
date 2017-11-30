@@ -29,6 +29,7 @@ from PIL import Image
 import pickle
 
 
+
 with open('data.pickle', 'rb') as f:
 	data  = pickle.load(f)
 
@@ -38,6 +39,7 @@ X = np.array( data['XTr']/255.0, dtype ='f') #normalize
 y = data['yTr']                            #training images
 yTe = data['yTe']
 xTe =np.array( data['XTe']/255.0, dtype='f')
+print (len(X), len(xTe))
 
 
 
@@ -102,15 +104,20 @@ class NaiveModel(nn.Module):
         
 
 # model = Model()
-model = NaiveModel()
+model = Model()
 
 n = len(y)
 
 #print ('ylength', n)
 #print ('testLength', nTest)
-batch_size = 10
+batch_size = 20
 model.train()
 optimizer = optim.Adam(model.parameters())
+
+train_loss = []
+avg_train_accu = []
+test_loss = []
+avg_test_accu = []
 
 def testing_acc():
 
@@ -129,76 +136,65 @@ def testing_acc():
         testingOut = model(testingX)
         prediction = testingOut.data.max(1)[1]
         correct += prediction.eq(testing_label.data).sum()
+        test_accuracy = 100. * correct / n_test
+        test_accu.append(test_accuracy)
+    avg_test_accu.append(np.mean(test_accu))
+    print('\nTest set: Accuracy: {:.3f}'.format(test_accuracy))
 
-    print('\nTest set: Accuracy: {:.2f}%'.format(100. * correct / n_test))
+    #plt.plot(np.arange(len(train_accu)), train_accu)
+    #plt.show()
 
-    plt.plot(np.arange(len(train_accu)), train_accu)
-    plt.show()
 
-train_loss = []
-train_accu = []
-test_loss = []
-test_accu = []
 j = 0
 #train the model
 for epoch in range(200):
+    train_accu = []
+    test_accu = []
     for i in range(n//batch_size):
         optimizer.zero_grad()
         yD  =  y[i*batch_size:(i+1)*batch_size]
         #print (yD)
         yy = torch.from_numpy(yD)
+        #print ('label', Variable(yy))
         train_label = Variable(yy)
         #print (train_label)
         xD  =  X[i*batch_size:(i+1)*batch_size,:,:,:]
         xx = torch.from_numpy(xD) # creates a tensor 
         xOut = model.forward(Variable(xx))
-        #print (xOut.size())
         #break
         loss = F.nll_loss(xOut, train_label)
         loss.backward()    # calc gradients
         train_loss.append(loss.data[0])
         optimizer.step()   # update gradients
         #print (xOut)
-        prediction = xOut.data.max(1)[1]   
+        Train_prediction = xOut.data.max(1)[1]   
         #print ("pre", xOut.data.max(1)[1])
         #print (xOut.data)
-        accuracy = prediction.eq(train_label.data).sum()/batch_size*100
-        train_accu.append(accuracy)
+        trainAccuracy = Train_prediction.eq(train_label.data).sum()/batch_size*100
+        #print (trainAccuracy)
+        train_accu.append(trainAccuracy)
         if j % 10 == 0:
-            print('Train Step: {}\tLoss: {:.3f}\tAccuracy: {:.3f}'.format(j, loss.data[0], accuracy))
-        if j % 100 == 0: 
-            testing_acc()
+            print('Train Step: {}\t\tLoss: {:.3f}\tAccuracy: {:.3f}'.format(j, loss.data[0], trainAccuracy))
+        #if j % 100 == 0: 
+            #pass
+            #testing_acc()
         j += 1
+    avg_train_accu.append(np.mean(train_accu))
+    print ('epoch')
+    testing_acc()
 
+#print (train_accu)
+#print (test_accu)
+#x = np.arange(0, 100)
+plt.plot(avg_train_accu, label = 'training')
+plt.plot(avg_test_accu, label = 'testing')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend()
+plt.show()
 
-
-#         #print (xOut)
- 
-# # test on testing data 
-# def testing_acc():
-
-#     model.eval()
-
-#     n_test = len(yTe)
-#     correct = 0
-#     for i in range(n_test//20): #batch size = 20 
-#         teX = xTe[i*20:(i+1)*20,:,:,:]
-#         testX = torch.from_numpy(teX)
-
-#         tey = yTe[i*20:(i+1)*20]
-#         testy = torch.from_numpy(tey)
-
-#         testingX, testing_label = Variable(testX, volatile = True), Variable(testy)
-#         testingOut = model(testingX)
-#         prediction = testingOut.data.max(1)[1]
-#         correct += prediction.eq(testing_label.data).sum()
-
-#     print('\nTest set: Accuracy: {:.2f}%'.format(100. * correct / n_test))
-
-#     plt.plot(np.arange(len(train_accu)), train_accu)
-#     plt.show()
-
-
+filename = 'model.sav'
+pickle.dump(model, open(filename, 'wb'))
 
 
 
