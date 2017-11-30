@@ -8,10 +8,10 @@ import pickle
 
 
 folderPredix = '../images/'
-cls  =['anger','disgust','fear','happy','neutral','sadness','surprise']
+cls  =['Anger','Disgust','Fear','Happy','Neutral','Sadness','Surprise']
 		# 0		# 1		   # 2	# 3		   #4		# 5			# 6
 '''
-img = cv2.imread("/Users/zhenyu_li/Desktop/Fall2017/2017fall_smile/src/final data/Anger/S011.jpg")
+img = cv2.imread("/Users/zhenyu_li/Desktop/Fall2017/2017fall_smile/images/Anger/S011.jpg")
 s = img.shape
 print (s)
 cv2.imshow("Faces found" ,img)
@@ -26,14 +26,18 @@ X = []	# images
 i = 0
 for cl  in cls:
     foldLoc = folderPredix+cl+'/'
-    for im in  os.listdir(foldLoc):     #change to grey, read S only, size 256x256x3
+    for im in  os.listdir(foldLoc):     
         f = foldLoc+im
-        if im[0] != 'S':
+        #print (im[0])
+        if im[0] == '.':
             continue
-        img = cv2.imread(f,-1)
-        #resize by multiplying 0.1
-        res = cv2.resize(img,None,fx=0.1, fy=0.1, interpolation = cv2.INTER_CUBIC)
-        #new image size: 49x64
+        print (f)    
+        img = cv2.imread(f,0) #greyscale
+        #print (img.size())
+
+        #resize by multiplying 0.5
+        res = cv2.resize(img,None,fx=1, fy=1, interpolation = cv2.INTER_CUBIC)
+        #new image size: 64x64
         imM = np.array(res)
         X.append(imM)
         y.append(i)
@@ -51,9 +55,9 @@ yTr=[]
 yTe=[]
 
 for id in idx:
-    xx = np.reshape(X[id],[1,49,64])
+    xx = np.reshape(X[id],[1,256,256])
     
-    if random.random()<0.85:	#70% training 
+    if random.random()<0.85:	#85% training 
         XTr.append(xx)
         yTr.append(y[id])
     else:
@@ -67,7 +71,5 @@ with open('data.pickle', 'wb') as f:
     data['XTe']=np.array(XTe)
     data['yTe']=np.array(yTe)
     pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
-
-
 
 
