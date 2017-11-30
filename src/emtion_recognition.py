@@ -34,7 +34,7 @@ with open('data.pickle', 'rb') as f:
 
 
 
-X =np.array( data['XTr']/255.0, dtype='f') #normalize 
+X =np.array( data['XTr']/255.0, dtype='f') #normalize
 y = data['yTr']                            #training images
 
 
@@ -42,16 +42,16 @@ class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
         # input is 49x64
-        # padding=2 
+        # padding=2
         self.conv1 = nn.Conv2d(1, 32, 5, padding=2)
         # self.conv1Bias = nn.Linear(1,1,1,32)
         self.conv2 = nn.Conv2d(32, 64, 5, padding=2)
         self.conv3 = nn.Conv2d(64, 96, 5, padding=2)
-        
+
         self.fc1 = nn.Linear(4608, 1024)
         self.fc2 = nn.Linear(1024, 128)
         self.fc3 = nn.Linear(128, 10)
-    
+
     def forward(self, x):
         x = F.max_pool2d(F.relu(self.conv1(x)), 2)
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)
@@ -76,7 +76,7 @@ optimizer = optim.Adam(model.parameters())
 
 train_loss = []
 train_accu = []
-j = 0h
+j = 0
 #train the model
 for epoch in range(200):
     for i in range(n//batch_size):
@@ -87,7 +87,7 @@ for epoch in range(200):
         train_label = Variable(yy)
         #print (train_label)
         xD  =  X[i*batch_size:(i+1)*batch_size,:,:,:]
-        xx = torch.from_numpy(xD) # creates a tensor 
+        xx = torch.from_numpy(xD) # creates a tensor
         xOut = model.forward(Variable(xx))
 #print (xOut.size())
 
@@ -96,7 +96,7 @@ for epoch in range(200):
         train_loss.append(loss.data[0])
         optimizer.step()   # update gradients
         #print (xOut)
-        prediction = xOut.data.max(1)[1]   
+        prediction = xOut.data.max(1)[1]
         #print ("pre", xOut.data.max(1)[1])
         #print (xOut.data)
         accuracy = prediction.eq(train_label.data).sum()/batch_size*100
@@ -106,14 +106,14 @@ for epoch in range(200):
         j += 1
 
         #print (xOut)
- 
-# test on testing data 
+
+# test on testing data
 model.eval()
 yTe = data['yTe']
 xTe =np.array( data['XTe']/255.0, dtype='f')
 n_test = len(yTe)
 correct = 0
-for i in range(n_test//20): #batch size = 20 
+for i in range(n_test//20): #batch size = 20
     teX = xTe[i*20:(i+1)*20,:,:,:]
     testX = torch.from_numpy(teX)
 
