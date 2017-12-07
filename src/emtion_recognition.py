@@ -27,7 +27,7 @@ from torch import utils
 import matplotlib.pyplot as plt
 from PIL import Image
 import pickle
-
+use_gpu = True
 
 
 with open('data.pickle', 'rb') as f:
@@ -131,6 +131,10 @@ def testing_acc():
 
         tey = yTe[i*20:(i+1)*20]
         testy = torch.from_numpy(tey)
+        
+        if use_gpu:
+            testX= testX.cuda()
+            testy=testy.cuda()
 
         testingX, testing_label = Variable(testX, volatile = True), Variable(testy)
         testingOut = model(testingX)
@@ -153,12 +157,16 @@ for epoch in range(200):
     for i in range(n//batch_size):
         optimizer.zero_grad()
         yD  =  y[i*batch_size:(i+1)*batch_size]
+        if use_gpu: 
+            yD = yD.cuda()
         #print (yD)
         yy = torch.from_numpy(yD)
         #print ('label', Variable(yy))
         train_label = Variable(yy)
         #print (train_label)
         xD  =  X[i*batch_size:(i+1)*batch_size,:,:,:]
+        if use_gpu: 
+            xx = xx.cuda()
         xx = torch.from_numpy(xD) # creates a tensor 
         xOut = model.forward(Variable(xx))
         #break
@@ -195,8 +203,6 @@ plt.show()
 
 filename = 'model.sav'
 pickle.dump(model, open(filename, 'wb'))
-
-
 
 
 
