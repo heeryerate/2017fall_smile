@@ -35,7 +35,7 @@ with open('data.pickle', 'rb') as f:
 
 
 
-X = np.array( data['XTr']/255.0, dtype ='f') #normalize 
+X = np.array( data['XTr']/255.0, dtype ='f') #normalize
 y = data['yTr']                            #training images
 yTe = data['yTe']
 xTe =np.array( data['XTe']/255.0, dtype='f')
@@ -50,17 +50,17 @@ class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
         # input is 128x128
-        # padding=2 
+        # padding=2
         self.conv1 = nn.Conv2d(1, 96, 7, padding = 2)
         self.conv2 = nn.Conv2d(96, 256, 5, padding = 2)
         self.conv3 = nn.Conv2d(256, 512, 3, padding = 2)
         self.conv4 = nn.Conv2d(512, 512, 3, padding = 2)
         self.conv5 = nn.Conv2d(512, 512, 3, padding = 2)
-    
+
         self.fc1 = nn.Linear(512*16*16, 4048)
         self.fc2 = nn.Linear(4048, 4049) #1024
         self.fc3 = nn.Linear(4049, 7)
-        
+
     def forward(self, x):
         x = F.max_pool2d(F.relu(self.conv1(x)), 3)
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)
@@ -80,17 +80,17 @@ class NaiveModel(nn.Module):
     def __init__(self):
         super(NaiveModel, self).__init__()
         # input is 128x128
-        # padding=2 
+        # padding=2
         self.conv1 = nn.Conv2d(1, 4, 11, padding = 2)
         # self.conv2 = nn.Conv2d(96, 256, 5, padding = 2)
         # self.conv3 = nn.Conv2d(256, 512, 3, padding = 2)
         # self.conv4 = nn.Conv2d(512, 512, 3, padding = 2)
         # self.conv5 = nn.Conv2d(512, 512, 3, padding = 2)
-    
+
         self.fc1 = nn.Linear(4*83*83, 7)
         # self.fc2 = nn.Linear(4048, 4049) #1024
         # self.fc3 = nn.Linear(4049, 7)
-        
+
     def forward(self, x):
         x = F.max_pool2d(F.relu(self.conv1(x)), 3)
         # x = F.max_pool2d(F.relu(self.conv2(x)), 2)
@@ -100,8 +100,8 @@ class NaiveModel(nn.Module):
         x = x.view(-1, 4*83*83)   # reshape Variable
         x = F.relu(self.fc1(x))
         return F.log_softmax(x)
-        
-        
+
+
 
 # model = Model()
 model = Model()
@@ -125,7 +125,7 @@ def testing_acc():
 
     n_test = len(yTe)
     correct = 0
-    for i in range(n_test//20): #batch size = 20 
+    for i in range(n_test//20): #batch size = 20
         teX = xTe[i*20:(i+1)*20,:,:,:]
         testX = torch.from_numpy(teX)
 
@@ -175,7 +175,7 @@ for epoch in range(200):
         train_loss.append(loss.data[0])
         optimizer.step()   # update gradients
         #print (xOut)
-        Train_prediction = xOut.data.max(1)[1]   
+        Train_prediction = xOut.data.max(1)[1]
         #print ("pre", xOut.data.max(1)[1])
         #print (xOut.data)
         trainAccuracy = Train_prediction.eq(train_label.data).sum()/batch_size*100
@@ -183,7 +183,7 @@ for epoch in range(200):
         train_accu.append(trainAccuracy)
         if j % 10 == 0:
             print('Train Step: {}\t\tLoss: {:.3f}\tAccuracy: {:.3f}'.format(j, loss.data[0], trainAccuracy))
-        #if j % 100 == 0: 
+        #if j % 100 == 0:
             #pass
             #testing_acc()
         j += 1
@@ -203,8 +203,4 @@ plt.show()
 
 filename = 'model.sav'
 pickle.dump(model, open(filename, 'wb'))
-
-
-
-
 
